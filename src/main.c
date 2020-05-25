@@ -35,7 +35,7 @@ void get_imu_reading_cb(void *user_data)
     count += 1;
   }
   check +=1;
-  if (check ==3){
+  if (check >2){
       for (int num =0;num<3; num++){
         sum_x = sum_x + imu_x[num];
         sum_y = sum_y + imu_y[num];
