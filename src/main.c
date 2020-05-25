@@ -1,39 +1,80 @@
-/*
- * Copyright (c) 2014-2018 Cesanta Software Limited
- * All rights reserved
- *
- * Licensed under the Apache License, Version 2.0 (the ""License"");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an ""AS IS"" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #include "mgos.h"
+#include "mgos_i2c.h"
+#include "mgos_imu.h"
 
-static void timer_cb(void *arg) {
-  static bool s_tick_tock = false;
-  LOG(LL_INFO,
-      ("%s uptime: %.2lf, RAM: %lu, %lu free", (s_tick_tock ? "Tick" : "Tock"),
-       mgos_uptime(), (unsigned long) mgos_get_heap_size(),
-       (unsigned long) mgos_get_free_heap_size()));
-  s_tick_tock = !s_tick_tock;
-#ifdef LED_PIN
-  mgos_gpio_toggle(LED_PIN);
-#endif
-  (void) arg;
+int count = 0, check =0;
+float imu_x[3], imu_y[3], imu_z[3];
+float sum_x, sum_y, sum_z;
+float avg_x, avg_y, avg_z;
+
+void get_imu_reading_cb(void *user_data)
+{
+
+  LOG(LL_INFO, ("TCU: Fetching IMU reading"));
+  struct mgos_imu *imu = (struct mgos_imu *)user_data;
+  float ax, ay, az;
+
+  if (!imu)
+    return;
+
+  if (mgos_imu_accelerometer_get(imu, &ax, &ay, &az))
+    LOG(LL_INFO, ("TCU: type=%-10s Accel X=%.2f Y=%.2f Z=%.2f", mgos_imu_accelerometer_get_name(imu), ax, ay, az));
+  if (count == 3)
+  {
+    count = 0;
+    imu_x[count] = ax;
+    imu_y[count] = ay;
+    imu_z[count] = az;
+    count += 1;
+  }
+  else
+  {
+    imu_x[count] = ax;
+    imu_y[count] = ay;
+    imu_z[count] = az;
+    count += 1;
+  }
+  check +=1;
+  if (check ==3){
+      for (int num =0;num<3; num++){
+        sum_x = sum_x + imu_x[num];
+        sum_y = sum_y + imu_y[num];
+        sum_z = sum_z + imu_z[num];
+      } 
+  }
+  avg_x = sum_x/3;
+  avg_y = sum_y/3;
+  avg_z = sum_z/3;
+  LOG(LL_INFO, ("TCU: Acceleration average value X=%.2f Y=%.2f Z=%.2f",  avg_x, avg_y, avg_z));
+
 }
 
-enum mgos_app_init_result mgos_app_init(void) {
-#ifdef LED_PIN
-  mgos_gpio_setup_output(LED_PIN, 0);
-#endif
-  mgos_set_timer(1000 /* ms */, MGOS_TIMER_REPEAT, timer_cb, NULL);
-  return MGOS_APP_INIT_SUCCESS;
+enum mgos_app_init_result mgos_app_init(void)
+{
+  struct mgos_i2c *i2c = mgos_i2c_get_global();
+  struct mgos_imu *imu = mgos_imu_create();
+  struct mgos_imu_acc_opts acc_opts;
+  struct mgos_imu_gyro_opts gyro_opts;
+  struct mgos_imu_mag_opts mag_opts;
+
+  if (!i2c)
+  {
+    LOG(LL_ERROR, ("I2C bus missing, set i2c.enable=true in mos.yml"));
+    return false;
+  }
+
+  if (!imu)
+  {
+    LOG(LL_ERROR, ("Cannot create IMU"));
+    return false;
+  }
+
+  acc_opts.type = ACC_MPU6050;
+  acc_opts.scale = 16.0; // G
+  acc_opts.odr = 100;    // Hz
+  if (!mgos_imu_accelerometer_create_i2c(imu, i2c, 0x68, &acc_opts))
+    LOG(LL_ERROR, ("Cannot create accelerometer on IMU"));
+
+  mgos_set_timer(1000, true, get_imu_reading_cb, imu);
+  return true;
 }
