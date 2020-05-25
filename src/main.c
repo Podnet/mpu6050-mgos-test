@@ -3,24 +3,13 @@
 #include "mgos_imu.h"
 
 int count = 0, check = 0;
-float imu_x[3], imu_y[3], imu_z[3];
+float imu_x[5], imu_y[5], imu_z[5];
 float sum_x, sum_y, sum_z;
 float avg_x, avg_y, avg_z;
+float max_x, max_y, max_z;
 
-void get_imu_reading_cb(void *user_data)
-{
 
-  LOG(LL_INFO, ("TCU: Fetching IMU reading"));
-  struct mgos_imu *imu = (struct mgos_imu *)user_data;
-  float ax, ay, az;
 
-  if (!imu)
-    return;
-
-  if (mgos_imu_accelerometer_get(imu, &ax, &ay, &az))
-    LOG(LL_INFO, ("TCU: type=%-10s Accel X=%.2f Y=%.2f Z=%.2f", mgos_imu_accelerometer_get_name(imu), ax, ay, az));
-  get_average_value(ax, ay, az);
-}
 
 void get_average_value(float ax, float ay, float az)
 {
@@ -50,11 +39,51 @@ void get_average_value(float ax, float ay, float az)
       sum_z = sum_z + imu_z[num];
     }
   }
+  // storing the largest number in [3] index
+  for (int i = 1; i < 3; ++i) {
+        if (imu_x[3] < imu_x[i])
+            imu_x[3] = imu_x[i];
+        if (imu_y[3] < imu_y[i])
+            imu_y[3] = imu_y[i];
+        if (imu_z[3] < imu_z[i])
+            imu_z[3] = imu_z[i];
+    }
+    // Storing the smallest number in [4] index
+  imu_x[4]=imu_x[0];
+  imu_y[4]=imu_y[0];
+  imu_z[4]=imu_z[0];
+  for (int i = 1; i < 3; ++i) {
+        if (imu_x[4] > imu_x[i])
+            imu_x[4] = imu_x[i];
+        if (imu_y[4] > imu_y[i])
+            imu_y[4] = imu_y[i];
+        if (imu_z[4] > imu_z[i])
+            imu_z[4] = imu_z[i];
+    }
   avg_x = sum_x / 3;
   avg_y = sum_y / 3;
   avg_z = sum_z / 3;
   LOG(LL_INFO, ("TCU: Acceleration average value X=%.2f Y=%.2f Z=%.2f", avg_x, avg_y, avg_z));
 }
+
+
+
+void get_imu_reading_cb(void *user_data)
+{
+
+  LOG(LL_INFO, ("TCU: Fetching IMU reading"));
+  struct mgos_imu *imu = (struct mgos_imu *)user_data;
+  float ax, ay, az;
+
+  if (!imu)
+    return;
+
+  if (mgos_imu_accelerometer_get(imu, &ax, &ay, &az))
+    LOG(LL_INFO, ("TCU: type=%-10s Accel X=%.2f Y=%.2f Z=%.2f", mgos_imu_accelerometer_get_name(imu), ax, ay, az));
+  get_average_value(ax, ay, az);
+}
+
+
 
 enum mgos_app_init_result mgos_app_init(void)
 {
