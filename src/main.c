@@ -19,9 +19,10 @@ void get_imu_reading_cb(void *user_data)
 
   if (mgos_imu_accelerometer_get(imu, &ax, &ay, &az))
     LOG(LL_INFO, ("TCU: type=%-10s Accel X=%.2f Y=%.2f Z=%.2f", mgos_imu_accelerometer_get_name(imu), ax, ay, az));
+  get_average_value(ax, ay, az);
 }
 
-void get_average_value(int ax, int ay, int az)
+void get_average_value(float ax, float ay, float az)
 {
 
   if (count == 3)
