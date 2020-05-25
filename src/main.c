@@ -2,7 +2,7 @@
 #include "mgos_i2c.h"
 #include "mgos_imu.h"
 
-int count = 0, check =0;
+int count = 0, check = 0;
 float imu_x[3], imu_y[3], imu_z[3];
 float sum_x, sum_y, sum_z;
 float avg_x, avg_y, avg_z;
@@ -19,6 +19,11 @@ void get_imu_reading_cb(void *user_data)
 
   if (mgos_imu_accelerometer_get(imu, &ax, &ay, &az))
     LOG(LL_INFO, ("TCU: type=%-10s Accel X=%.2f Y=%.2f Z=%.2f", mgos_imu_accelerometer_get_name(imu), ax, ay, az));
+}
+
+void get_average_value(int ax, int ay, int az)
+{
+
   if (count == 3)
   {
     count = 0;
@@ -34,19 +39,20 @@ void get_imu_reading_cb(void *user_data)
     imu_z[count] = az;
     count += 1;
   }
-  check +=1;
-  if (check >2){
-      for (int num =0;num<3; num++){
-        sum_x = sum_x + imu_x[num];
-        sum_y = sum_y + imu_y[num];
-        sum_z = sum_z + imu_z[num];
-      } 
+  check += 1;
+  if (check > 2)
+  {
+    for (int num = 0; num < 3; num++)
+    {
+      sum_x = sum_x + imu_x[num];
+      sum_y = sum_y + imu_y[num];
+      sum_z = sum_z + imu_z[num];
+    }
   }
-  avg_x = sum_x/3;
-  avg_y = sum_y/3;
-  avg_z = sum_z/3;
-  LOG(LL_INFO, ("TCU: Acceleration average value X=%.2f Y=%.2f Z=%.2f",  avg_x, avg_y, avg_z));
-
+  avg_x = sum_x / 3;
+  avg_y = sum_y / 3;
+  avg_z = sum_z / 3;
+  LOG(LL_INFO, ("TCU: Acceleration average value X=%.2f Y=%.2f Z=%.2f", avg_x, avg_y, avg_z));
 }
 
 enum mgos_app_init_result mgos_app_init(void)
