@@ -4,13 +4,16 @@
 
 int count = 0, check = 0;
 float imu_x[5], imu_y[5], imu_z[5];
-float sum_x, sum_y, sum_z;
+float sum_x, sum_y, sum_z;   //
 float avg_x, avg_y, avg_z;
 float max_x, max_y, max_z;
 
 
 
-
+///
+/// Get average values of acceleration in ax, ay and az. Store 3 latest values in buffer and 
+///everytime new values come and last values gets pushed out of buffer.
+///
 void get_average_value(float ax, float ay, float az)
 {
 
@@ -48,10 +51,11 @@ void get_average_value(float ax, float ay, float az)
         if (imu_z[3] < imu_z[i])
             imu_z[3] = imu_z[i];
     }
-    // Storing the smallest number in [4] index
+    // reference value to find smallest reading 
   imu_x[4]=imu_x[0];
   imu_y[4]=imu_y[0];
   imu_z[4]=imu_z[0];
+  // Storing the smallest number in [4] index
   for (int i = 1; i < 3; ++i) {
         if (imu_x[4] > imu_x[i])
             imu_x[4] = imu_x[i];
@@ -67,7 +71,9 @@ void get_average_value(float ax, float ay, float az)
 }
 
 
-
+///
+/// Get accerleration values 
+///
 void get_imu_reading_cb(void *user_data)
 {
 
@@ -83,8 +89,9 @@ void get_imu_reading_cb(void *user_data)
   get_average_value(ax, ay, az);
 }
 
-
-
+///
+/// mongoose intialization function
+///
 enum mgos_app_init_result mgos_app_init(void)
 {
   struct mgos_i2c *i2c = mgos_i2c_get_global();
