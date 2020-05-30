@@ -6,14 +6,22 @@ int count = 0, check = 0;
 float imu_x[5], imu_y[5], imu_z[5];
 float sum_x, sum_y, sum_z;   //
 float avg_x, avg_y, avg_z;
-float max_x, max_y, max_z;
+
+/*! \mainpage IMU testing
+ *
+ * \section Documentation
+ *
+ * This is the introduction. Add some content....
+ *
+ * \section install_sec Installation
+ *
+ * \subsection step1 Step 1: Opening the box
+ *
+ * etc...
+ */
 
 
 
-///
-/// Get average values of acceleration in ax, ay and az. Store 3 latest values in buffer and 
-///everytime new values come and last values gets pushed out of buffer.
-///
 void get_average_value(float ax, float ay, float az)
 {
 
@@ -69,11 +77,10 @@ void get_average_value(float ax, float ay, float az)
   avg_z = sum_z / 3;
   LOG(LL_INFO, ("TCU: Acceleration average value X=%.2f Y=%.2f Z=%.2f", avg_x, avg_y, avg_z));
 }
+/**< Get average values of acceleration in ax, ay and az. Store 3 latest values in buffer and  everytime new values come and last values gets pushed out of buffer.*/
 
 
-///
-/// Get accerleration values 
-///
+ 
 void get_imu_reading_cb(void *user_data)
 {
 
@@ -88,10 +95,9 @@ void get_imu_reading_cb(void *user_data)
     LOG(LL_INFO, ("TCU: type=%-10s Accel X=%.2f Y=%.2f Z=%.2f", mgos_imu_accelerometer_get_name(imu), ax, ay, az));
   get_average_value(ax, ay, az);
 }
+/**< Get acceleration values */
 
-///
-/// mongoose intialization function
-///
+
 enum mgos_app_init_result mgos_app_init(void)
 {
   struct mgos_i2c *i2c = mgos_i2c_get_global();
@@ -121,3 +127,5 @@ enum mgos_app_init_result mgos_app_init(void)
   mgos_set_timer(1000, true, get_imu_reading_cb, imu);
   return true;
 }
+
+/**< Mongoose app intialization function */
