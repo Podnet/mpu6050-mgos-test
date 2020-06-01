@@ -11,13 +11,8 @@ float avg_x, avg_y, avg_z;
  *
  * \section Documentation
  *
- * This is the introduction. Add some content....
+ * This is a test app for MPU6050. The app gives average accelerometer and gyro values.
  *
- * \section install_sec Installation
- *
- * \subsection step1 Step 1: Opening the box
- *
- * etc...
  */
 
 
